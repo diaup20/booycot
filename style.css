@@ -1,0 +1,33 @@
+/* style.css
+   ملف تنسيقات مستقل - بخط Cairo والأنماط الأساسية
+*/
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+:root{
+    --bg: #f7f8f9;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: var(--bg);
+}
+
+/* تحسينات تصميم بسيطة */
+#app { min-height: 100vh; }
+header h1 { letter-spacing: .3px; }
+
+/* رسائل الحالة */
+#status-message { min-height: 2.5rem; }
+
+/* بطاقات النتيجة */
+.card {
+    transition: box-shadow .2s ease;
+}
+.card:hover {
+    box-shadow: 0 10px 30px rgba(2,6,23,0.08);
+}
+
+/* استجابة الهواتف */
+@media (max-width: 640px) {
+    header { padding-left: 1rem; padding-right: 1rem; }
+}

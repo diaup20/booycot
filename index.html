@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>استعلام الشركات والمجالات</title>
+    <!-- Tailwind CDN (يمكنك استبداله أو إزالة إذا أردت نسخة محلية) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- خط Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <!-- ربط ملف CSS المستقل -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased min-h-screen">
+    <div id="app" class="max-w-xl mx-auto min-h-screen bg-white shadow-xl">
+        <header class="p-4 bg-blue-600 text-white shadow-lg fixed top-0 w-full max-w-xl z-10 rounded-b-xl flex justify-between items-center">
+            <h1 class="text-2xl font-bold">نظام استعلام الشركات والمجالات</h1>
+            <button id="import-button" class="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition duration-150 focus:outline-none focus:ring-2 focus:ring-green-300">
+                استيراد بيانات Excel (CSV)
+            </button>
+            <input type="file" id="excel-file-input" accept=".csv" class="hidden">
+        </header>
+
+        <main class="pt-20 pb-4 p-4">
+            <div class="mb-6 sticky top-20 bg-white pt-2 z-10 shadow-md rounded-xl p-4 space-y-3 border border-gray-100">
+                <p class="text-right text-gray-700 font-semibold text-sm border-b pb-2">التصفية المخصصة:</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="filter-serial" placeholder="م (رقم تسلسلي)"
+                           class="p-2 border border-gray-300 rounded-lg text-right focus:ring-blue-500 focus:border-blue-500"
+                           oninput="filterData()">
+
+                    <select id="filter-sector" 
+                            class="p-2 border border-gray-300 rounded-lg text-right focus:ring-blue-500 focus:border-blue-500 w-full"
+                            onchange="filterData()">
+                        <option value="">-- كل المجالات --</option>
+                    </select>
+
+                    <input type="text" id="filter-products" placeholder="المنتجات"
+                           class="p-2 border border-gray-300 rounded-lg text-right focus:ring-blue-500 focus:border-blue-500"
+                           oninput="filterData()">
+                    <input type="text" id="filter-manufacturer-ar" placeholder="الشركات المصنعة (عربي)"
+                           class="p-2 border border-gray-300 rounded-lg text-right focus:ring-blue-500 focus:border-blue-500"
+                           oninput="filterData()">
+                    <input type="text" id="filter-manufacturer-en" placeholder="الشركات المصنعة (انجليزي)"
+                           class="p-2 border border-gray-300 rounded-lg text-right focus:ring-blue-500 focus:border-blue-500"
+                           oninput="filterData()">
+                    <div></div> 
+                </div>
+            </div>
+
+            <div id="status-message" class="text-center p-3 text-sm text-gray-600 bg-white rounded-lg shadow-inner mb-4">
+                جاري التحميل...
+            </div>
+
+            <div id="data-list" class="space-y-4"></div>
+        </main>
+    </div>
+
+    <!-- تحميل السكربتات المستقلة كـ ES modules -->
+    <script type="module">
+        import { initFirebase, subscribeToCollection, addRecordsToCollection } from './firebase.js';
+        import { startApp } from './app.js';
+
+        // تهيئة Firebase (ضع إعداداتك هنا في ملف firebase.js)
+        // استدعاء startApp بعد التهيئة — initFirebase يُرجع وعدًا عندما تنتهي التهيئة
+        initFirebase().then(() => {
+            startApp({ subscribeToCollection, addRecordsToCollection });
+        }).catch(err => {
+            console.error("خطأ في تهيئة Firebase:", err);
+            document.getElementById('status-message').textContent = 'خطأ في تهيئة Firebase. تحقق من ملف firebase.js.';
+            document.getElementById('status-message').classList.replace('text-gray-600', 'text-red-500');
+        });
+    </script>
+</body>
+</html>

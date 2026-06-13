@@ -1,0 +1,78 @@
+name: 🇾🇪 Export Yemen Products
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies 📦
+        run: pip install pandas openpyxl -q
+      
+      - name: 🚀 Export Yemen Products
+        run: |
+          python << 'EOF'
+          import pandas as pd
+          from io import BytesIO
+          import urllib.request
+          from datetime import datetime
+          
+          print("🇾🇪 تصدير منتجات اليمن...")
+          
+          url = "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz"
+          response = urllib.request.urlopen(url)
+          compressed_file = BytesIO(response.read())
+          
+          df = pd.read_csv(compressed_file, compression='gzip', sep='\t', low_memory=False, dtype={'code': str}, on_bad_lines='skip')
+          
+          yemen_df = df[(df['countries_en'].notna()) & (df['countries_en'].str.contains('Yemen', case=False, regex=False, na=False))].copy()
+          
+          columns = ['code', 'product_name', 'brands', 'categories', 'countries_en', 'ingredients_text', 'nutrition_grades']
+          yemen_df = yemen_df[[col for col in columns if col in yemen_df.columns]].copy()
+          
+          yemen_df = yemen_df.rename(columns={
+              'code': 'الباركود',
+              'product_name': 'اسم المنتج',
+              'brands': 'العلامة التجارية',
+              'categories': 'الفئة',
+              'countries_en': 'البلد',
+              'ingredients_text': 'المكونات',
+              'nutrition_grades': 'التقييم الغذائي',
+          })
+          
+          yemen_df = yemen_df.drop_duplicates(subset=['الباركود'])
+          yemen_df = yemen_df.sort_values(by='اسم المنتج', na_position='last')
+          
+          timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+          excel_file = f"yemen_products_{timestamp}.xlsx"
+          csv_file = f"yemen_products_{timestamp}.csv"
+          
+          yemen_df.to_excel(excel_file, sheet_name='منتجات اليمن', index=False, engine='openpyxl')
+          yemen_df.to_csv(csv_file, index=False, encoding='utf-8-sig')
+          
+          print(f"✅ تم إنشاء: {excel_file}")
+          print(f"✅ تم إنشاء: {csv_file}")
+          print(f"📊 عدد المنتجات: {len(yemen_df):,}")
+          EOF
+      
+      - name: 📤 Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: yemen-products
+          path: |
+            yemen_products_*.xlsx
+            yemen_products_*.csv
+          retention-days: 30
